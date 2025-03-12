@@ -1,9 +1,17 @@
-"use client";
-import { useState } from "react";
+'use client';
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react';
+
+import { HttpLog } from '@prisma/client';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+} from '@/components/ui/pagination';
 import {
   Table,
   TableBody,
@@ -11,36 +19,38 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-} from "@/components/ui/pagination";
-import { HttpLog } from "@prisma/client";
+} from '@/components/ui/table';
+
+import { LogDetailsSheet } from './LogDetailsSheet';
+import TableFilters from './TableFilters';
+import { columns } from './columns';
 
 const fetchHttpLogs = async ({
   page,
   limit,
   source,
+  method,
+  status,
+  startDate,
+  endDate,
 }: {
   page: number;
   limit: number;
-  source?: string;
+  source: string;
+  method: string;
+  status: string;
+  startDate: Date | null;
+  endDate: Date | null;
 }) => {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
   });
-  if (source) params.append("source", source);
+  if (source) params.append('source', source);
+  if (method) params.append('method', method);
+  if (status) params.append('status', status);
+  if (startDate) params.append('startDate', startDate.toISOString());
+  if (endDate) params.append('endDate', endDate.toISOString());
 
   const res = await fetch(`/api/http-logs?${params}`);
   return res.json();
@@ -49,78 +59,132 @@ const fetchHttpLogs = async ({
 const HttpLogsTable = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [source, setSource] = useState("");
+  const [source, setSource] = useState('');
+  const [method, setMethod] = useState('');
+  const [status, setStatus] = useState('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [selectedLog, setSelectedLog] = useState<HttpLog | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["httpLogs", { page, limit, source }],
-    queryFn: () => fetchHttpLogs({ page, limit, source }),
+  const resetFilters = () => {
+    setPage(1);
+    setLimit(10);
+    setSource('');
+    setMethod('');
+    setStatus('');
+    setStartDate(null);
+    setEndDate(null);
+  };
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['httpLogs', { page, limit, source, method, status, startDate, endDate }],
+    queryFn: () => fetchHttpLogs({ page, limit, source, method, status, startDate, endDate }),
     placeholderData: keepPreviousData,
   });
 
-  console.log(">>> ℹ️ HttpLogsTable - 60", { source });
+  useEffect(() => {
+    if (refreshInterval) {
+      const interval = setInterval(() => {
+        refetch();
+      }, refreshInterval);
+      return () => clearInterval(interval);
+    }
+  }, [refetch, refreshInterval]);
+
+  const table = useReactTable({
+    data: Array.isArray(data?.data) ? data.data : [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4 p-6">
       <h1 className="text-2xl font-bold">HTTP Logs</h1>
 
-      {/* Filters */}
-      <div className="flex gap-4">
-        <Input
-          placeholder="Filter by source"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
+      <div className="flex items-center justify-between">
+        <TableFilters
+          source={source}
+          setSource={setSource}
+          limit={limit}
+          setLimit={setLimit}
+          method={method}
+          setMethod={setMethod}
+          status={status}
+          setStatus={setStatus}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          onApply={() => setPage(1)}
+          onReset={resetFilters}
         />
-        <Select
-          value={limit.toString()}
-          onValueChange={(value) => setLimit(Number(value))}
-        >
-          <SelectTrigger className="w-[100px]">
-            <SelectValue placeholder="Limit" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10</SelectItem>
-            <SelectItem value="20">20</SelectItem>
-            <SelectItem value="50">50</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button onClick={() => setPage(1)}>Apply</Button>
+        <div>
+          <label htmlFor="refresh-interval" className="mr-2">
+            Refresh:
+          </label>
+          <select
+            id="refresh-interval"
+            value={refreshInterval || ''}
+            onChange={(e) => setRefreshInterval(e.target.value ? Number(e.target.value) : null)}
+            className="rounded border p-1"
+          >
+            <option value="">Désactivé</option>
+            <option value={5000}>5s</option>
+            <option value={10000}>10s</option>
+            <option value={30000}>30s</option>
+            <option value={60000}>1m</option>
+            <option value={300000}>5m</option>
+            <option value={900000}>15m</option>
+            <option value={1800000}>30m</option>
+            <option value={3600000}>1h</option>
+            <option value={7200000}>2h</option>
+            <option value={86400000}>1d</option>
+          </select>
+        </div>
       </div>
 
-      {/* Table */}
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Source</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead>URL</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Time</TableHead>
-          </TableRow>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center">
+              <TableCell colSpan={columns.length} className="text-center">
                 Loading...
               </TableCell>
             </TableRow>
           ) : (
-            data?.data.map((log: HttpLog) => (
-              <TableRow key={log.id}>
-                <TableCell>{log.source}</TableCell>
-                <TableCell>{log.method}</TableCell>
-                <TableCell>{log.url}</TableCell>
-                <TableCell>{log.statusCode}</TableCell>
-                <TableCell>
-                  {new Date(log.timestamp).toLocaleString()}
-                </TableCell>
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                className="cursor-pointer"
+                onClick={() => {
+                  setSelectedLog(row.original);
+                  setSheetOpen(true);
+                }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
 
-      {/* Pagination */}
       {data?.pagination && (
         <Pagination>
           <PaginationContent>
@@ -128,9 +192,7 @@ const HttpLogsTable = () => {
               {page === 1 ? (
                 <PaginationLink isActive={false}>Previous</PaginationLink>
               ) : (
-                <PaginationLink onClick={() => setPage(page - 1)}>
-                  Previous
-                </PaginationLink>
+                <PaginationLink onClick={() => setPage(page - 1)}>Previous</PaginationLink>
               )}
             </PaginationItem>
             <PaginationItem>
@@ -147,6 +209,8 @@ const HttpLogsTable = () => {
           </PaginationContent>
         </Pagination>
       )}
+
+      <LogDetailsSheet log={selectedLog} open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
   );
 };

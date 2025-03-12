@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import { QueryProvider } from "@/lib/react-query/QueryProvider";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider } from 'next-auth/react';
+
+import { QueryProvider } from '@/lib/react-query/QueryProvider';
 
 export default function Prodiver({ children }: { children: React.ReactNode }) {
   return (

@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { ExtendedSession, authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma/prisma';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session: ExtendedSession | null = await getServerSession(authOptions);
 

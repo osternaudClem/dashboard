@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/prisma/prisma';
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,8 +9,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(log, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to log data", details: (error as Error).message },
-      { status: 500 }
+      { error: 'Failed to log data', details: (error as Error).message },
+      { status: 500 },
     );
   }
 }
@@ -17,10 +18,10 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const source = url.searchParams.get("source") || undefined;
-    const level = url.searchParams.get("level") || undefined;
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+    const source = url.searchParams.get('source') || undefined;
+    const level = url.searchParams.get('level') || undefined;
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
     const logs = await prisma.log.findMany({
       where: {
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
       take: limit,
       skip: (page - 1) * limit,
       orderBy: {
-        timestamp: "desc",
+        timestamp: 'desc',
       },
     });
 
@@ -49,8 +50,8 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch logs data", details: (error as Error).message },
-      { status: 500 }
+      { error: 'Failed to fetch logs data', details: (error as Error).message },
+      { status: 500 },
     );
   }
 }

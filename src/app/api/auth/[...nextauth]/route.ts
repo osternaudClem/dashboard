@@ -1,12 +1,9 @@
-import NextAuth, {
-  Session,
-  SessionStrategy,
-  type NextAuthOptions,
-} from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "@/lib/prisma/prisma";
-import bcrypt from "bcryptjs";
-import { JWT } from "next-auth/jwt";
+import bcrypt from 'bcryptjs';
+import NextAuth, { type NextAuthOptions, Session, SessionStrategy } from 'next-auth';
+import { JWT } from 'next-auth/jwt';
+import CredentialsProvider from 'next-auth/providers/credentials';
+
+import { prisma } from '@/lib/prisma/prisma';
 
 type ExtendedJWT = JWT & {
   id: string;
@@ -25,17 +22,17 @@ export type ExtendedSession = Session & {
 };
 
 export const authOptions: NextAuthOptions = {
-  session: { strategy: "jwt" as SessionStrategy },
+  session: { strategy: 'jwt' as SessionStrategy },
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
         email: {
-          label: "Email",
-          type: "email",
-          placeholder: "example@email.com",
+          label: 'Email',
+          type: 'email',
+          placeholder: 'example@email.com',
         },
-        password: { label: "Password", type: "password" },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
@@ -43,13 +40,10 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
-        if (!user) throw new Error("No user found");
+        if (!user) throw new Error('No user found');
 
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-        if (!isValid) throw new Error("Invalid password");
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) throw new Error('Invalid password');
 
         return { id: user.id, email: user.email, username: user.username };
       },

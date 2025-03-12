@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+
+import { prisma } from '@/lib/prisma/prisma';
 
 const MAX_RESPONSE_LENGTH = 1000;
 const MAX_STRING_LENGTH = 500;
@@ -9,15 +10,15 @@ const truncateResponse = (response: string) => {
     return response;
   }
 
-  if (typeof response === "string") {
+  if (typeof response === 'string') {
     return response.length > MAX_RESPONSE_LENGTH
-      ? response.slice(0, MAX_STRING_LENGTH) + "..."
+      ? response.slice(0, MAX_STRING_LENGTH) + '...'
       : response;
   }
 
-  if (typeof response === "object") {
+  if (typeof response === 'object') {
     return JSON.stringify(response).length > MAX_RESPONSE_LENGTH
-      ? JSON.stringify(response).slice(0, MAX_STRING_LENGTH) + "..."
+      ? JSON.stringify(response).slice(0, MAX_STRING_LENGTH) + '...'
       : JSON.stringify(response);
   }
 
@@ -29,16 +30,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     // get header authorization Bearer key
-    const authorization = req.headers.get("authorization");
+    const authorization = req.headers.get('authorization');
 
     if (!authorization) {
       return NextResponse.json(
-        { error: "Unauthorized", details: "Authorization header is missing" },
-        { status: 401 }
+        { error: 'Unauthorized', details: 'Authorization header is missing' },
+        { status: 401 },
       );
     }
 
-    const bearerToken = authorization.split("Bearer ")[1];
+    const bearerToken = authorization.split('Bearer ')[1];
 
     // check if the authorization key is valid
     const isExist = await prisma.app.findFirst({
@@ -47,8 +48,8 @@ export async function POST(req: NextRequest) {
 
     if (!isExist) {
       return NextResponse.json(
-        { error: "Unauthorized", details: "Invalid Authorization key" },
-        { status: 401 }
+        { error: 'Unauthorized', details: 'Invalid Authorization key' },
+        { status: 401 },
       );
     }
 
@@ -60,10 +61,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: "Failed to add httpLog data",
+        error: 'Failed to add httpLog data',
         details: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -71,19 +72,21 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const deleteLogs = url.searchParams.get("delete") || undefined;
+    const deleteLogs = url.searchParams.get('delete') || undefined;
 
     if (deleteLogs) {
       await prisma.httpLog.deleteMany({});
-      return NextResponse.json({ message: "All http logs deleted" });
+      return NextResponse.json({ message: 'All http logs deleted' });
     }
 
-    const source = url.searchParams.get("source") || undefined;
-    const method = url.searchParams.get("method") || undefined;
-    const logUrl = url.searchParams.get("url") || undefined;
-    const statusCode = url.searchParams.get("status") || undefined;
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "10", 10);
+    const source = url.searchParams.get('source') || undefined;
+    const method = url.searchParams.get('method') || undefined;
+    const logUrl = url.searchParams.get('url') || undefined;
+    const statusCode = url.searchParams.get('status') || undefined;
+    const startDate = url.searchParams.get('startDate') || undefined;
+    const endDate = url.searchParams.get('endDate') || undefined;
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
     const status = statusCode ? parseInt(statusCode, 10) : undefined;
 
@@ -93,16 +96,29 @@ export async function GET(req: NextRequest) {
         url: logUrl,
         statusCode: status,
         source,
+        timestamp: {
+          ...(startDate && { gte: new Date(startDate) }),
+          ...(endDate && { lte: new Date(endDate) }),
+        },
       },
       take: limit,
       skip: (page - 1) * limit,
       orderBy: {
-        timestamp: "desc",
+        timestamp: 'desc',
       },
     });
 
     const totalHttpLogs = await prisma.httpLog.count({
-      where: { method, url: logUrl, statusCode: status, source },
+      where: {
+        method,
+        url: logUrl,
+        statusCode: status,
+        source,
+        timestamp: {
+          ...(startDate && { gte: new Date(startDate) }),
+          ...(endDate && { lte: new Date(endDate) }),
+        },
+      },
     });
 
     return NextResponse.json({
@@ -117,10 +133,10 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: "Failed to fetch httpLog data",
+        error: 'Failed to fetch httpLog data',
         details: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
