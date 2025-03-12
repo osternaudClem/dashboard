@@ -1,5 +1,8 @@
+import Link from 'next/link';
+
 import { RequestStatsCard } from '@/components/stats/RequestStats';
 import HttpLogsTable from '@/components/table/HttpLogsTable';
+import { Button } from '@/components/ui/button';
 
 type Props = {
   params: Promise<{ appId: string }>;
@@ -10,7 +13,12 @@ export default async function Page({ params }: Props) {
 
   return (
     <>
-      <h1>{appId}</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1>{appId}</h1>
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/${appId}/edit`}>Edit App</Link>
+        </Button>
+      </div>
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
         <RequestStatsCard timeframe="hour" appId={appId} />
         <RequestStatsCard timeframe="day" appId={appId} />
