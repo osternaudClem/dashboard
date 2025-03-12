@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String  @id @default(cuid())
+  username  String  @unique
+  email     String  @unique
+  password  String
+
+  // Relations
+  projects  Project[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  url         String
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apps        App[]
+}
+
+model App {
+  id         String   @id @default(cuid())
+  name       String
+  apiKey     String   @unique @default(uuid()) // Unique key for logging
+  createdAt  DateTime @default(now())
+
+  // Relations
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  logs       Log[]
+  httpLogs   HttpLog[]
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  source    String
+  level     String
+  message   String
+  metadata  Json?
+  timestamp DateTime @default(now())
+
+  // Relations
+  appId     String
+  app       App     @relation(fields: [appId], references: [id], onDelete: Cascade)
+}
+
+model HttpLog {
+  id          String   @id @default(cuid())
+  source      String   // Application or service name
+  method      String   // HTTP method (GET, POST, PUT, DELETE, etc.)
+  url         String   // Requested URL
+  statusCode  Int      // HTTP response status code
+  headers     Json?    // Request headers
+  params      Json?    // URL parameters
+  query       Json?    // Query parameters
+  body        Json?    // Request body
+  response    Json?    // Response body (optional)
+  ip          String?  // Client IP address
+  userAgent   String?  // User-Agent of the request
+  timestamp   DateTime @default(now()) // Log timestamp
+
+  // Relations
+  appId       String
+  app         App     @relation(fields: [appId], references: [id], onDelete: Cascade)
+}
