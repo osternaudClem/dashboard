@@ -15,14 +15,12 @@ import { cn } from '@/lib/utils';
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
   const handleLogin = useCallback(
     async (event: FormEvent) => {
       event.preventDefault();
-      setLoading(true);
       setError('');
 
       try {
@@ -39,8 +37,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
         }
       } catch (error) {
         setError((error as Error).message);
-      } finally {
-        setLoading(false);
       }
     },
     [email, password, router],

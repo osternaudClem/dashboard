@@ -119,30 +119,9 @@ const HttpLogsTable = () => {
           setEndDate={setEndDate}
           onApply={() => setPage(1)}
           onReset={resetFilters}
+          refreshInterval={refreshInterval}
+          setRefreshInterval={setRefreshInterval}
         />
-        <div>
-          <label htmlFor="refresh-interval" className="mr-2">
-            Refresh:
-          </label>
-          <select
-            id="refresh-interval"
-            value={refreshInterval || ''}
-            onChange={(e) => setRefreshInterval(e.target.value ? Number(e.target.value) : null)}
-            className="rounded border p-1"
-          >
-            <option value="">Désactivé</option>
-            <option value={5000}>5s</option>
-            <option value={10000}>10s</option>
-            <option value={30000}>30s</option>
-            <option value={60000}>1m</option>
-            <option value={300000}>5m</option>
-            <option value={900000}>15m</option>
-            <option value={1800000}>30m</option>
-            <option value={3600000}>1h</option>
-            <option value={7200000}>2h</option>
-            <option value={86400000}>1d</option>
-          </select>
-        </div>
       </div>
 
       <Table>

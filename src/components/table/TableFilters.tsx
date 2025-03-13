@@ -12,17 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-const STATUS_CODES = [
-  { value: '200', label: '200 OK' },
-  { value: '201', label: '201 Created' },
-  { value: '400', label: '400 Bad Request' },
-  { value: '401', label: '401 Unauthorized' },
-  { value: '403', label: '403 Forbidden' },
-  { value: '404', label: '404 Not Found' },
-  { value: '500', label: '500 Internal Server Error' },
-];
+import { HTTP_METHODS, LIMIT_SIZES, REFRESH_INTERVALS, STATUS_CODES } from '@/constants/filters';
 
 const DEFAULT_VALUES = {
   source: '',
@@ -46,6 +36,8 @@ interface TableFiltersProps {
   setStartDate: (date: Date | null) => void;
   endDate: Date | null;
   setEndDate: (date: Date | null) => void;
+  refreshInterval: number | null;
+  setRefreshInterval: (value: number | null) => void;
   onApply: () => void;
   onReset: () => void;
 }
@@ -63,6 +55,8 @@ const TableFilters = ({
   setStartDate,
   endDate,
   setEndDate,
+  refreshInterval,
+  setRefreshInterval,
   onApply,
   onReset,
 }: TableFiltersProps) => {
@@ -75,150 +69,176 @@ const TableFilters = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-4">
-      <div className="relative">
-        <Input
-          placeholder="Filter by source"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
-          className={isDefault.source ? 'border-dashed' : ''}
-        />
-        {!isDefault.source && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-            onClick={() => setSource(DEFAULT_VALUES.source)}
-          >
-            ×
-          </Button>
-        )}
-      </div>
-
-      <div className="relative">
-        <Select value={method} onValueChange={setMethod}>
-          <SelectTrigger className={`w-[120px] ${isDefault.method ? 'border-dashed' : ''}`}>
-            <SelectValue placeholder="Method" />
-          </SelectTrigger>
-          <SelectContent>
-            {HTTP_METHODS.map((m) => (
-              <SelectItem key={m} value={m}>
-                {m}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {!isDefault.method && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-            onClick={() => setMethod(DEFAULT_VALUES.method)}
-          >
-            ×
-          </Button>
-        )}
-      </div>
-
-      <div className="relative">
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className={`w-[200px] ${isDefault.status ? 'border-dashed' : ''}`}>
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_CODES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {!isDefault.status && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-            onClick={() => setStatus(DEFAULT_VALUES.status)}
-          >
-            ×
-          </Button>
-        )}
-      </div>
-
-      <div className="relative flex gap-2">
-        <Popover>
-          <PopoverTrigger asChild>
+    <div className="flex w-full justify-between">
+      <div className="flex flex-wrap gap-4">
+        <div className="relative">
+          <Input
+            placeholder="Filter by source"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            className={isDefault.source ? 'border-dashed' : ''}
+          />
+          {!isDefault.source && (
             <Button
-              variant="outline"
-              className={`w-[150px] justify-start text-left font-normal ${isDefault.dates ? 'border-dashed' : ''}`}
+              variant="ghost"
+              size="sm"
+              className="absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2 rounded-full p-0"
+              onClick={() => setSource(DEFAULT_VALUES.source)}
             >
-              {startDate ? format(startDate, 'PP') : <span>Start date</span>}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              ×
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              selected={{ from: startDate || undefined, to: endDate || undefined }}
-              onSelect={(range) => {
-                if (range) {
-                  const { from, to } = range;
-                  setStartDate(from ? new Date(from.setHours(0, 0, 0, 0)) : null);
-                  setEndDate(to ? new Date(to.setHours(23, 59, 59, 999)) : null);
-                }
+          )}
+        </div>
+
+        <div className="relative">
+          <Select value={method} onValueChange={setMethod}>
+            <SelectTrigger className={`w-[120px] ${isDefault.method ? 'border-dashed' : ''}`}>
+              <SelectValue placeholder="Method" />
+            </SelectTrigger>
+            <SelectContent>
+              {HTTP_METHODS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {!isDefault.method && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
+              onClick={() => setMethod(DEFAULT_VALUES.method)}
+            >
+              ×
+            </Button>
+          )}
+        </div>
+
+        <div className="relative">
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger
+              className={`w-[200px] ${isDefault.status ? 'border-dashed' : 'bg-white'}`}
+            >
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_CODES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {!isDefault.status && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
+              onClick={() => setStatus(DEFAULT_VALUES.status)}
+            >
+              ×
+            </Button>
+          )}
+        </div>
+
+        <div className="relative flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={`w-[150px] justify-start text-left font-normal ${isDefault.dates ? 'border-dashed bg-transparent' : ''}`}
+              >
+                {startDate ? format(startDate, 'PP') : <span>Start date</span>}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={{ from: startDate || undefined, to: endDate || undefined }}
+                onSelect={(range) => {
+                  if (range) {
+                    const { from, to } = range;
+                    setStartDate(from ? new Date(from.setHours(0, 0, 0, 0)) : null);
+                    setEndDate(to ? new Date(to.setHours(23, 59, 59, 999)) : null);
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {!isDefault.dates && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 rounded-full p-0"
+              onClick={() => {
+                setStartDate(DEFAULT_VALUES.startDate);
+                setEndDate(DEFAULT_VALUES.endDate);
               }}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-        {!isDefault.dates && (
+            >
+              ×
+            </Button>
+          )}
+        </div>
+
+        <div className="relative">
+          <Select value={limit.toString()} onValueChange={(value) => setLimit(Number(value))}>
+            <SelectTrigger className={`w-[100px] ${isDefault.limit ? 'border-dashed' : ''}`}>
+              <SelectValue placeholder="Limit" />
+            </SelectTrigger>
+            <SelectContent>
+              {LIMIT_SIZES.map((size) => (
+                <SelectItem key={size.value} value={size.value}>
+                  {size.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {!isDefault.limit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
+              onClick={() => setLimit(DEFAULT_VALUES.limit)}
+            >
+              ×
+            </Button>
+          )}
+        </div>
+
+        <div className="flex gap-2">
           <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 rounded-full p-0"
+            variant="outline"
             onClick={() => {
-              setStartDate(DEFAULT_VALUES.startDate);
-              setEndDate(DEFAULT_VALUES.endDate);
+              onReset();
+              onApply();
             }}
           >
-            ×
+            Reset All
           </Button>
-        )}
+        </div>
       </div>
-
-      <div className="relative">
-        <Select value={limit.toString()} onValueChange={(value) => setLimit(Number(value))}>
-          <SelectTrigger className={`w-[100px] ${isDefault.limit ? 'border-dashed' : ''}`}>
-            <SelectValue placeholder="Limit" />
+      <div className="ml-auto">
+        <Select
+          value={refreshInterval?.toString() || ''}
+          onValueChange={(value) =>
+            setRefreshInterval(value && value !== 'disabled' ? Number(value) : null)
+          }
+        >
+          <SelectTrigger className="w-[120px]">
+            <SelectValue placeholder="Refresh" />
           </SelectTrigger>
+
           <SelectContent>
-            <SelectItem value="10">10</SelectItem>
-            <SelectItem value="20">20</SelectItem>
-            <SelectItem value="50">50</SelectItem>
+            {REFRESH_INTERVALS.map((interval) => (
+              <SelectItem key={interval.value} value={interval.value}>
+                {interval.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        {!isDefault.limit && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-            onClick={() => setLimit(DEFAULT_VALUES.limit)}
-          >
-            ×
-          </Button>
-        )}
-      </div>
-
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          onClick={() => {
-            onReset();
-            onApply();
-          }}
-        >
-          Reset All
-        </Button>
       </div>
     </div>
   );
