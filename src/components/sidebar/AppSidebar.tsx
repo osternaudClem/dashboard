@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import Logo from '@/components/Logo';
 import {
   Sidebar,
   SidebarContent,
@@ -8,22 +9,16 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 
-import Logo from '../logo';
-import { NavMain } from './nav-main';
-import NavUser from './nav-user';
-import { ThemeToggle } from './theme-toggle';
+import { NavMain } from './NavMain';
+import NavUser from './NavUser';
+import { ThemeToggle } from './ThemeToggle';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <div className="my-6">
-          <div className="group-data-[state=collapsed]:hidden">
-            <Logo />
-          </div>
-          <div className="group-data-[state=expanded]:hidden">
-            <Logo isIcon />
-          </div>
+          <Logo />
         </div>
       </SidebarHeader>
       <SidebarContent>

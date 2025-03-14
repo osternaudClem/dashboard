@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 
-import { App, Project } from '@prisma/client';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
@@ -18,8 +17,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-
-type ProjectWithApps = Project & { apps: App[] };
+import { useGetMeProjects } from '@/lib/react-query/projectQueries';
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`animate-pulse rounded-md bg-gray-300 ${className}`} />;
@@ -36,22 +34,19 @@ function SidebarSkeleton() {
   );
 }
 
-const fetchProjects = async (): Promise<ProjectWithApps[]> => {
-  const res = await fetch(`/api/projects`);
-  return res.json();
-};
-
 export function NavMain() {
-  const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['projects'],
-    queryFn: () => fetchProjects(),
-  });
+  const { data: projects = [], isFetching: isProjectFetching } = useGetMeProjects();
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupAction title="Add Project" asChild>
+        <Link href="/project/create">
+          <Plus />
+        </Link>
+      </SidebarGroupAction>
       <SidebarMenu>
-        {isLoading ? (
+        {isProjectFetching ? (
           <SidebarSkeleton />
         ) : (
           projects.map((item, key) => (

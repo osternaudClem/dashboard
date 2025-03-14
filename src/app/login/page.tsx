@@ -1,5 +1,5 @@
-import { LoginForm } from '@/components/login-form';
-import Logo from '@/components/logo';
+import LoginForm from '@/components/LoginForm';
+import Logo from '@/components/Logo';
 
 const LoginPage = () => {
   return (

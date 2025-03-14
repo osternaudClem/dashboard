@@ -14,7 +14,7 @@ async function fetchStats(appId: string) {
   return response.json();
 }
 
-export function RequestStatsCard({ timeframe, appId }: RequestStatsProps) {
+const RequestStatsCard = ({ timeframe, appId }: RequestStatsProps) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['stats', appId],
     queryFn: () => fetchStats(appId),
@@ -58,4 +58,6 @@ export function RequestStatsCard({ timeframe, appId }: RequestStatsProps) {
       </div>
     </div>
   );
-}
+};
+
+export default RequestStatsCard;

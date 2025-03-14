@@ -1,4 +1,4 @@
-import EditAppForm from '@/components/edit-app-form';
+import EditAppForm from '@/components/EditAppForm';
 
 type Props = {
   params: Promise<{ appId: string }>;

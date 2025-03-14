@@ -3,13 +3,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from 'next-auth/react';
 
-import { ThemeProvider } from '@/components/theme-provider';
+import ThemeProvider from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/lib/react-query/QueryProvider';
 
 const queryClient = new QueryClient();
 
-export default function Prodiver({ children }: { children: React.ReactNode }) {
+const Prodiver = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
@@ -23,4 +23,6 @@ export default function Prodiver({ children }: { children: React.ReactNode }) {
       </QueryClientProvider>
     </ThemeProvider>
   );
-}
+};
+
+export default Prodiver;

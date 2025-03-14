@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { LogDetailsSheet } from './LogDetailsSheet';
+import LogDetailsSheet from './LogDetailsSheet';
 import TableFilters from './TableFilters';
 import { columns } from './columns';
 
