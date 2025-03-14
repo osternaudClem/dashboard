@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { RequestStatsCard } from '@/components/stats/RequestStats';
+import RequestStatsCard from '@/components/stats/RequestStats';
 import HttpLogsTable from '@/components/table/HttpLogsTable';
 import { Button } from '@/components/ui/button';
 

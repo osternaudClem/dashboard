@@ -19,7 +19,7 @@ const parsedResponse = (str: unknown): unknown => {
   }
 };
 
-export function LogDetailsSheet({ log, open, onOpenChange }: LogDetailsSheetProps) {
+const LogDetailsSheet = ({ log, open, onOpenChange }: LogDetailsSheetProps) => {
   if (!log) return null;
 
   return (
@@ -88,4 +88,6 @@ export function LogDetailsSheet({ log, open, onOpenChange }: LogDetailsSheetProp
       </SheetContent>
     </Sheet>
   );
-}
+};
+
+export default LogDetailsSheet;
