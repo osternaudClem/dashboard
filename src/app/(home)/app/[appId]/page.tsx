@@ -8,7 +8,7 @@ type Props = {
   params: Promise<{ appId: string }>;
 };
 
-export default async function Page({ params }: Props) {
+const AppPage = async ({ params }: Props) => {
   const { appId } = await params;
 
   return (
@@ -16,7 +16,7 @@ export default async function Page({ params }: Props) {
       <div className="mb-4 flex items-center justify-between">
         <h1>{appId}</h1>
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/${appId}/edit`}>Edit App</Link>
+          <Link href={`/app/${appId}/edit`}>Edit App</Link>
         </Button>
       </div>
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -29,4 +29,6 @@ export default async function Page({ params }: Props) {
       </div>
     </>
   );
-}
+};
+
+export default AppPage;

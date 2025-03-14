@@ -33,7 +33,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
         if (result?.error) {
           setError('Invalid credentials');
         } else {
-          router.push('/dashboard'); // Redirect to home page
+          router.push('/'); // Redirect to home page
         }
       } catch (error) {
         setError((error as Error).message);

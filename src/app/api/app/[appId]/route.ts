@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 
 import { getServerSession } from 'next-auth';
 
-import { ExtendedSession, authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { type ExtendedSession, authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma/prisma';
 
 export async function GET(_req: Request, { params }: { params: { appId: string } }) {
   try {
     const session: ExtendedSession | null = await getServerSession(authOptions);
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

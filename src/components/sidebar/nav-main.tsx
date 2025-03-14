@@ -6,6 +6,7 @@ import { App, Project } from '@prisma/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
 
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   SidebarGroup,
@@ -17,8 +18,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-
-import { Avatar, AvatarFallback } from './ui/avatar';
 
 type ProjectWithApps = Project & { apps: App[] };
 
@@ -79,7 +78,7 @@ export function NavMain() {
                     {item.apps?.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.id}>
                         <SidebarMenuSubButton asChild>
-                          <Link href={`/dashboard/${subItem.id}`}>
+                          <Link href={`/app/${subItem.id}`}>
                             <span>{subItem.name}</span>
                           </Link>
                         </SidebarMenuSubButton>

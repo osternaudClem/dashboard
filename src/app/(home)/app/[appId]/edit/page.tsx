@@ -4,8 +4,10 @@ type Props = {
   params: Promise<{ appId: string }>;
 };
 
-export default async function EditAppPage({ params }: Props) {
+const EditAppPage = async ({ params }: Props) => {
   const { appId } = await params;
 
   return <EditAppForm appId={appId} />;
-}
+};
+
+export default EditAppPage;

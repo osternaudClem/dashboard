@@ -1,4 +1,4 @@
-import { AppSidebar } from '@/components/app-sidebar';
+import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,7 +10,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+const HomeLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -36,4 +36,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </SidebarInset>
     </SidebarProvider>
   );
-}
+};
+
+export default HomeLayout;
