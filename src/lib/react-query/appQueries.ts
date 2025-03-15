@@ -16,11 +16,17 @@ type UpdateApp = {
   apiKey?: string;
 };
 
-export const useGetAppById = (appId: string) =>
-  useGenericQuery<App | null>([QUERY_KEYS.APP_BY_ID, appId], async (): Promise<App | null> => {
-    const res = await fetch(`/api/app/${appId}`);
-    return res.json();
-  });
+export const useGetAppById = (appId?: string) =>
+  useGenericQuery<App | null>(
+    [QUERY_KEYS.APP_BY_ID, appId],
+    async (): Promise<App | null> => {
+      const res = await fetch(`/api/app/${appId}`);
+      return res.json();
+    },
+    {
+      enabled: !!appId,
+    },
+  );
 
 export const useCreateProjectApp = () => {
   const queryClient = useQueryClient();

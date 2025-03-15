@@ -50,8 +50,7 @@ const AppPage = () => {
 
   return (
     <div className="space-y-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1>{appId}</h1>
+      <div className="gao-4 mb-4 flex items-center justify-end">
         <Button variant="outline" asChild>
           <Link href={`/project/${projectId}/app/${appId}/edit`}>Edit App</Link>
         </Button>

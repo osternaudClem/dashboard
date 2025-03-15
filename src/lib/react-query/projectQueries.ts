@@ -30,12 +30,15 @@ export const useGetMeProjects = () => {
   });
 };
 
-export const useGetProjectById = (projectId: string) =>
+export const useGetProjectById = (projectId?: string) =>
   useGenericQuery<ProjectWithApps | null>(
     [QUERY_KEYS.PROJECT_BY_ID, projectId],
     async (): Promise<ProjectWithApps | null> => {
       const res = await fetch(`/api/projects/${projectId}`);
       return res.json();
+    },
+    {
+      enabled: !!projectId,
     },
   );
 

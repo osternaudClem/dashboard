@@ -16,19 +16,16 @@ const ProjecPage = async ({ params }: Props) => {
 
   return (
     <div className="mb-4 flex-col">
-      <header className="mb-4 flex items-center justify-between">
-        <h1>ProjecPage - {projectId}</h1>
-        <div className="flex gap-4">
-          <Button variant="outline" asChild>
-            <Link href={`/project/${projectId}/edit`}>Edit Project</Link>
-          </Button>
-          <Button variant="default" asChild>
-            <Link href={`/project/${projectId}/app/create`}>
-              <PlusIcon />
-              New App
-            </Link>
-          </Button>
-        </div>
+      <header className="mb-4 flex items-center justify-end gap-4">
+        <Button variant="outline" asChild>
+          <Link href={`/project/${projectId}/edit`}>Edit Project</Link>
+        </Button>
+        <Button variant="default" asChild>
+          <Link href={`/project/${projectId}/app/create`}>
+            <PlusIcon />
+            New App
+          </Link>
+        </Button>
       </header>
 
       <ListApps projectId={projectId} />

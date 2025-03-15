@@ -5,8 +5,16 @@ import { getServerSession } from 'next-auth';
 import { type ExtendedSession, authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma/prisma';
 
-export async function GET(_req: Request, { params }: { params: { appId: string } }) {
+type ParamsProps = {
+  params: Promise<{
+    appId: string;
+  }>;
+};
+
+export async function GET(_req: Request, { params }: ParamsProps) {
   try {
+    const { appId } = await params;
+
     const session: ExtendedSession | null = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
@@ -14,7 +22,7 @@ export async function GET(_req: Request, { params }: { params: { appId: string }
     }
 
     const app = await prisma.app.findUnique({
-      where: { id: params.appId },
+      where: { id: appId },
       include: { project: true },
     });
 
@@ -32,8 +40,10 @@ export async function GET(_req: Request, { params }: { params: { appId: string }
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { appId: string } }) {
+export async function PUT(req: Request, { params }: ParamsProps) {
   try {
+    const { appId } = await params;
+
     const session: ExtendedSession | null = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -41,7 +51,7 @@ export async function PUT(req: Request, { params }: { params: { appId: string } 
 
     const data = await req.json();
     const app = await prisma.app.update({
-      where: { id: params.appId },
+      where: { id: appId },
       data: { name: data.name },
     });
 
@@ -51,17 +61,19 @@ export async function PUT(req: Request, { params }: { params: { appId: string } 
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { appId: string } }) {
+export async function DELETE(_req: Request, { params }: ParamsProps) {
   try {
+    const { appId } = await params;
+
     const session: ExtendedSession | null = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await prisma.app.delete({ where: { id: params.appId } });
+    await prisma.app.delete({ where: { id: appId } });
 
-    return NextResponse.json({ success: true, id: params.appId });
+    return NextResponse.json({ success: true, id: appId });
   } catch {
     return NextResponse.json({ error: 'Failed to delete app' }, { status: 500 });
   }

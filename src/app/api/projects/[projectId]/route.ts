@@ -6,8 +6,16 @@ import { prisma } from '@/lib/prisma/prisma';
 
 import { ExtendedSession, authOptions } from '../../auth/[...nextauth]/route';
 
-export async function GET(_req: Request, { params }: { params: { projectId: string } }) {
+type ParamsProps = {
+  params: Promise<{
+    projectId: string;
+  }>;
+};
+
+export async function GET(_req: Request, { params }: ParamsProps) {
   try {
+    const { projectId } = await params;
+
     const session: ExtendedSession | null = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
@@ -15,7 +23,7 @@ export async function GET(_req: Request, { params }: { params: { projectId: stri
     }
 
     const project = await prisma.project.findUnique({
-      where: { id: params.projectId },
+      where: { id: projectId },
       include: { apps: true },
     });
 

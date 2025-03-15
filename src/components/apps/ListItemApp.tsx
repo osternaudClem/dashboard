@@ -42,7 +42,9 @@ const ListItemApp = ({ className = '', app }: Props) => {
         </div>
       </div>
 
-      {!isFetching ? <AppLogsChart httpLogs={chartData?.data || []} hideHeader /> : null}
+      {!isFetching ? (
+        <AppLogsChart httpLogs={chartData?.data || []} hideHeader className="mt-8" />
+      ) : null}
     </div>
   );
 };

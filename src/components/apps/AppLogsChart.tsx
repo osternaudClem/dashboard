@@ -31,11 +31,12 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 type AppLogsChartProps = {
+  className?: string;
   httpLogs: HttpLog[];
   hideHeader?: boolean;
 };
 
-const AppLogsChart = ({ httpLogs, hideHeader = false }: AppLogsChartProps) => {
+const AppLogsChart = ({ className = '', httpLogs, hideHeader = false }: AppLogsChartProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const handleToggleExpand = useCallback(() => {
@@ -95,7 +96,7 @@ const AppLogsChart = ({ httpLogs, hideHeader = false }: AppLogsChartProps) => {
 
   return (
     <Collapsible open={isExpanded} onOpenChange={handleToggleExpand}>
-      <Card className="bg-muted/50 space-y-4">
+      <Card className={cn('bg-muted/50 space-y-4', className)}>
         {!hideHeader ? (
           <CardHeader className="mb-0">
             <CollapsibleTrigger asChild>
