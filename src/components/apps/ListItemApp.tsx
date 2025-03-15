@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { App } from '@prisma/client';
 import { PenSquareIcon, TrashIcon } from 'lucide-react';
 
+import { useGetHttpLogsStats } from '@/lib/react-query/httpLogsQueries';
 import { cn } from '@/lib/utils';
 
+import { getDefaultToday } from '../SelectDate';
 import { Button } from '../ui/button';
 import AppLogsChart from './AppLogsChart';
 
@@ -14,8 +16,14 @@ type Props = {
 };
 
 const ListItemApp = ({ className = '', app }: Props) => {
+  const { data: chartData, isFetching } = useGetHttpLogsStats({
+    appId: app.id,
+    startDate: getDefaultToday().from,
+    endDate: getDefaultToday().to,
+  });
+
   return (
-    <div className={cn('border-input rounded-lg border p-4', className)}>
+    <div className={cn('border-input rounded-md border p-4', className)}>
       <div className="flex items-center justify-between gap-4">
         <div className="">
           <Link href={`/project/${app.projectId}/app/${app.id}`}>{app.name}</Link>
@@ -34,7 +42,7 @@ const ListItemApp = ({ className = '', app }: Props) => {
         </div>
       </div>
 
-      <AppLogsChart appId={app.id} />
+      {!isFetching ? <AppLogsChart httpLogs={chartData?.data || []} hideHeader /> : null}
     </div>
   );
 };

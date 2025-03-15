@@ -1,29 +1,45 @@
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+
+import { PlusIcon, XIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { HTTP_METHODS, STATUS_CODES } from '@/constants/filters';
+import { cn } from '@/lib/utils';
+
+import SelectDate from '../SelectDate';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { HTTP_METHODS, LIMIT_SIZES, REFRESH_INTERVALS, STATUS_CODES } from '@/constants/filters';
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
-const DEFAULT_VALUES = {
-  source: '',
-  method: '',
-  status: '',
-  limit: 10,
-  startDate: null,
-  endDate: null,
-} as const;
+type FilterKey = 'method' | 'statusCode' | 'timeRange';
 
-interface TableFiltersProps {
+const AVAILABLE_FILTERS: {
+  key: FilterKey;
+  label: string;
+  options: string[];
+}[] = [
+  {
+    key: 'method',
+    label: 'Method',
+    options: HTTP_METHODS,
+  },
+  {
+    key: 'statusCode',
+    label: 'Status',
+    options: STATUS_CODES.map((s) => s.label),
+  },
+  {
+    key: 'timeRange',
+    label: 'Time range',
+    options: [],
+  },
+];
+
+type TableFiltersProps = {
   source: string;
   setSource: (value: string) => void;
   limit: number;
@@ -32,21 +48,15 @@ interface TableFiltersProps {
   setMethod: (value: string) => void;
   status: string;
   setStatus: (value: string) => void;
-  startDate: Date | null;
-  setStartDate: (date: Date | null) => void;
-  endDate: Date | null;
-  setEndDate: (date: Date | null) => void;
+  startDate: Date | undefined;
+  setStartDate: (date: Date | undefined) => void;
+  endDate: Date | undefined;
+  setEndDate: (date: Date | undefined) => void;
   refreshInterval: number | null;
   setRefreshInterval: (value: number | null) => void;
-  onApply: () => void;
-  onReset: () => void;
-}
+};
 
 const TableFilters = ({
-  source,
-  setSource,
-  limit,
-  setLimit,
   method,
   setMethod,
   status,
@@ -55,191 +65,157 @@ const TableFilters = ({
   setStartDate,
   endDate,
   setEndDate,
-  refreshInterval,
-  setRefreshInterval,
-  onApply,
-  onReset,
 }: TableFiltersProps) => {
-  const isDefault = {
-    source: source === DEFAULT_VALUES.source,
-    method: method === DEFAULT_VALUES.method,
-    status: status === DEFAULT_VALUES.status,
-    limit: limit === DEFAULT_VALUES.limit,
-    dates: startDate === DEFAULT_VALUES.startDate && endDate === DEFAULT_VALUES.endDate,
-  };
+  const [filters, setFilters] = useState<FilterKey[]>([]);
+
+  useEffect(() => {
+    if (!!method && !filters.includes('method')) {
+      setFilters((prevFilters) => [...prevFilters, 'method']);
+    }
+  }, [filters, method]);
+
+  const handleAddFilter = useCallback((filter: FilterKey) => {
+    setFilters((prevFilters) => [...prevFilters, filter]);
+  }, []);
+
+  const handleRemoveFilter = useCallback(
+    (filter: FilterKey) => {
+      let setter;
+      if (filter === 'method') {
+        setter = setMethod;
+      } else if (filter === 'statusCode') {
+        setter = setStatus;
+      } else if (filter === 'timeRange') {
+        setter = () => {
+          setStartDate(undefined);
+          setEndDate(undefined);
+        };
+      } else {
+        setter = () => {};
+      }
+
+      setter('');
+
+      setFilters((prevFilters) => prevFilters.filter((f) => f !== filter));
+    },
+    [setEndDate, setMethod, setStartDate, setStatus],
+  );
 
   return (
-    <div className="flex w-full justify-between">
-      <div className="flex flex-wrap gap-4">
-        <div className="relative">
-          <Input
-            placeholder="Filter by source"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            className={isDefault.source ? 'border-dashed' : ''}
-          />
-          {!isDefault.source && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-              onClick={() => setSource(DEFAULT_VALUES.source)}
-            >
-              ×
-            </Button>
+    <div className="flex flex-wrap gap-4">
+      {filters.includes('method') ? (
+        <div
+          className={cn(
+            'hover:bg-accent/70 flex items-center rounded-md border',
+            !!method ? 'bg-accent' : 'border-accent border-dashed',
           )}
-        </div>
-
-        <div className="relative">
-          <Select value={method} onValueChange={setMethod}>
-            <SelectTrigger className={`w-[120px] ${isDefault.method ? 'border-dashed' : ''}`}>
-              <SelectValue placeholder="Method" />
-            </SelectTrigger>
-            <SelectContent>
-              {HTTP_METHODS.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {!isDefault.method && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-              onClick={() => setMethod(DEFAULT_VALUES.method)}
-            >
-              ×
-            </Button>
-          )}
-        </div>
-
-        <div className="relative">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger
-              className={`w-[200px] ${isDefault.status ? 'border-dashed' : 'bg-white'}`}
-            >
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_CODES.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {!isDefault.status && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-              onClick={() => setStatus(DEFAULT_VALUES.status)}
-            >
-              ×
-            </Button>
-          )}
-        </div>
-
-        <div className="relative flex items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={`w-[150px] justify-start text-left font-normal ${isDefault.dates ? 'border-dashed bg-transparent' : ''}`}
-              >
-                {startDate ? format(startDate, 'PP') : <span>Start date</span>}
-                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Button variant="ghost" className="hover:bg-transparent">
+                {method || 'Method'}
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={{ from: startDate || undefined, to: endDate || undefined }}
-                onSelect={(range) => {
-                  if (range) {
-                    const { from, to } = range;
-                    setStartDate(from ? new Date(from.setHours(0, 0, 0, 0)) : null);
-                    setEndDate(to ? new Date(to.setHours(23, 59, 59, 999)) : null);
-                  }
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          {!isDefault.dates && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 rounded-full p-0"
-              onClick={() => {
-                setStartDate(DEFAULT_VALUES.startDate);
-                setEndDate(DEFAULT_VALUES.endDate);
-              }}
-            >
-              ×
-            </Button>
-          )}
-        </div>
-
-        <div className="relative">
-          <Select value={limit.toString()} onValueChange={(value) => setLimit(Number(value))}>
-            <SelectTrigger className={`w-[100px] ${isDefault.limit ? 'border-dashed' : ''}`}>
-              <SelectValue placeholder="Limit" />
-            </SelectTrigger>
-            <SelectContent>
-              {LIMIT_SIZES.map((size) => (
-                <SelectItem key={size.value} value={size.value}>
-                  {size.label}
-                </SelectItem>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {HTTP_METHODS.map((m) => (
+                <DropdownMenuCheckboxItem
+                  key={m}
+                  checked={method === m}
+                  onClick={() => setMethod(m)}
+                >
+                  {m}
+                </DropdownMenuCheckboxItem>
               ))}
-            </SelectContent>
-          </Select>
-          {!isDefault.limit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-1/2 right-8 h-6 w-6 -translate-y-1/2 rounded-full p-0"
-              onClick={() => setLimit(DEFAULT_VALUES.limit)}
-            >
-              ×
-            </Button>
-          )}
-        </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <div className="flex gap-2">
           <Button
-            variant="outline"
-            onClick={() => {
-              onReset();
-              onApply();
-            }}
+            variant="ghost"
+            size="icon"
+            className="rounded-full p-0 hover:bg-transparent hover:text-neutral-700 dark:hover:text-neutral-300"
+            onClick={() => handleRemoveFilter('method')}
           >
-            Reset All
+            <XIcon className="size-3.5" />
           </Button>
         </div>
-      </div>
-      <div className="ml-auto">
-        <Select
-          value={refreshInterval?.toString() || ''}
-          onValueChange={(value) =>
-            setRefreshInterval(value && value !== 'disabled' ? Number(value) : null)
-          }
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Refresh" />
-          </SelectTrigger>
+      ) : null}
 
-          <SelectContent>
-            {REFRESH_INTERVALS.map((interval) => (
-              <SelectItem key={interval.value} value={interval.value}>
-                {interval.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {filters.includes('statusCode') ? (
+        <div
+          className={cn(
+            'hover:bg-accent/70 flex items-center rounded-md border',
+            !!status ? 'bg-accent' : 'border-accent border-dashed',
+          )}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Button variant="ghost" className="hover:bg-transparent">
+                {status || 'Status'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {STATUS_CODES.map((m) => (
+                <DropdownMenuCheckboxItem
+                  key={m.value}
+                  checked={status === m.value}
+                  onClick={() => setStatus(m.value)}
+                >
+                  {m.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full p-0 hover:bg-transparent hover:text-neutral-700 dark:hover:text-neutral-300"
+            onClick={() => handleRemoveFilter('statusCode')}
+          >
+            <XIcon className="size-3.5" />
+          </Button>
+        </div>
+      ) : null}
+
+      {filters.includes('timeRange') ? (
+        <div
+          className={cn(
+            'hover:bg-accent/70 flex items-center rounded-md border',
+            !!startDate || !!endDate ? 'bg-accent' : 'border-accent border-dashed',
+          )}
+        >
+          <SelectDate
+            dateRange={{ from: startDate, to: endDate }}
+            onChange={({ from, to }) => {
+              setStartDate(from);
+              setEndDate(to);
+            }}
+          />
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full p-0 hover:bg-transparent hover:text-neutral-700 dark:hover:text-neutral-300"
+            onClick={() => handleRemoveFilter('timeRange')}
+          >
+            <XIcon className="size-3.5" />
+          </Button>
+        </div>
+      ) : null}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="h-[38px]">
+            <PlusIcon /> filter
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {AVAILABLE_FILTERS.map((filter) => (
+            <DropdownMenuItem key={filter.key} onClick={() => handleAddFilter(filter.key)}>
+              {filter.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

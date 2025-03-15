@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   endOfDay,
@@ -11,7 +11,7 @@ import {
   subDays,
   subHours,
 } from 'date-fns';
-import { CalendarIcon, ChevronDown } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -96,18 +96,29 @@ const SelectDate = ({
     [onChange],
   );
 
+  useEffect(() => {
+    const preset = PRESET_RANGES.find(
+      (preset) =>
+        preset.range.from.getTime() === dateRange.from?.getTime() &&
+        preset.range.to.getTime() === dateRange.to?.getTime(),
+    );
+
+    if (preset) {
+      setSelectedPreset(preset.label);
+    }
+  }, [dateRange]);
+
   return (
     <div className={cn(className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="ghost" className="flex items-center gap-2 hover:bg-transparent">
             <CalendarIcon className="h-4 w-4" />
             {selectedPreset
               ? selectedPreset
               : dateRange.from && dateRange.to
                 ? `${format(dateRange.from, 'MMM d, yyyy')} - ${format(dateRange.to, 'MMM d, yyyy')}`
                 : 'Select Date Range'}
-            <ChevronDown className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-[650px] min-w-[320px] overflow-auto p-4">
@@ -132,7 +143,6 @@ const SelectDate = ({
               </ul>
             </div>
 
-            {/* Right Panel: Calendar */}
             <div className="flex-1">
               <h4 className="mb-2 text-sm font-semibold">Select Range</h4>
               <Calendar
@@ -144,7 +154,6 @@ const SelectDate = ({
             </div>
           </div>
 
-          {/* Footer Actions */}
           <div className="mt-4 flex justify-between">
             <Button
               variant="ghost"

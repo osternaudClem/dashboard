@@ -1,8 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { HttpLog } from '@prisma/client';
+import { Collapsible } from '@radix-ui/react-collapsible';
+import { ChevronRightIcon } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
@@ -13,8 +15,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { cn } from '@/lib/utils';
 
-import SelectDate, { getDefaultToday } from '../SelectDate';
+import { Card, CardContent, CardHeader } from '../ui/card';
+import { CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
 const chartConfig = {
   total: {
@@ -27,31 +31,39 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-async function fetchStats(
-  appId: string,
-  dateRange: { from: Date | undefined; to: Date | undefined },
-): Promise<{ hour: string; total: number; errors: number }[]> {
-  const response = await fetch(
-    `/api/http-logs/stats?appId=${appId}&from=${dateRange.from?.toISOString()}&to=${dateRange.to?.toISOString()}`,
-  );
-  if (!response.ok) throw new Error('Failed to fetch stats');
-  return response.json();
-}
-
 type AppLogsChartProps = {
-  appId: string;
+  httpLogs: HttpLog[];
+  hideHeader?: boolean;
 };
 
-const AppLogsChart = ({ appId }: AppLogsChartProps) => {
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>(getDefaultToday());
+const AppLogsChart = ({ httpLogs, hideHeader = false }: AppLogsChartProps) => {
+  const [isExpanded, setIsExpanded] = useState(true);
 
-  const { data } = useQuery({
-    queryKey: ['stats', appId, dateRange],
-    queryFn: () => fetchStats(appId, dateRange),
-  });
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
+
+  const data = useMemo(() => {
+    const hourlyStats = httpLogs.reduce(
+      (acc, log) => {
+        const hour = new Date(log.timestamp).toISOString().slice(11, 13) + ':00';
+
+        if (!acc[hour]) {
+          acc[hour] = { hour, total: 0, errors: 0 };
+        }
+
+        acc[hour].total++;
+        if (log.statusCode >= 400) {
+          acc[hour].errors++;
+        }
+
+        return acc;
+      },
+      {} as Record<string, { hour: string; total: number; errors: number }>,
+    );
+
+    return Object.values(hourlyStats).sort((a, b) => a.hour.localeCompare(b.hour));
+  }, [httpLogs]);
 
   const maxTotal = useMemo(() => {
     if (!data) return 0;
@@ -83,65 +95,86 @@ const AppLogsChart = ({ appId }: AppLogsChartProps) => {
   }, [maxTotal, maxErrors]);
 
   return (
-    <div className="bg-muted/50 rounded-lg pt-4">
-      <SelectDate dateRange={dateRange} onChange={setDateRange} />
-
-      <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-        <AreaChart data={data}>
-          <defs>
-            <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--color-total)" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="var(--color-total)" stopOpacity={0.1} />
-            </linearGradient>
-            <linearGradient id="fillErrors" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--color-errors)" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="var(--color-errors)" stopOpacity={0.1} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid vertical={false} />
-          <XAxis dataKey="hour" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} />
-          <YAxis
-            yAxisId="left"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tickCount={3}
-            domain={[0, maxY]}
-          />
-          <YAxis
-            yAxisId="right"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tickCount={3}
-            orientation="right"
-            domain={[0, maxY]}
-            className="hidden"
-          />
-
-          <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-          <Area
-            dataKey="total"
-            type="natural"
-            fill="url(#fillTotal)"
-            stroke="var(--color-total)"
-            stackId="a"
-            yAxisId="left"
-            className="pb-10"
-          />
-          <Area
-            dataKey="errors"
-            type="natural"
-            fill="url(#fillErrors)"
-            stroke="var(--color-errors)"
-            stackId="a"
-            yAxisId="right"
-            className="pb-10"
-          />
-          <ChartLegend content={<ChartLegendContent />} />
-        </AreaChart>
-      </ChartContainer>
-    </div>
+    <Collapsible open={isExpanded} onOpenChange={handleToggleExpand}>
+      <Card className="bg-muted/50 space-y-4">
+        {!hideHeader ? (
+          <CardHeader className="mb-0">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">Application Logs Overview</h2>
+                <ChevronRightIcon
+                  className={cn('transition-transform', isExpanded ? 'rotate-90' : '')}
+                />
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+        ) : null}
+        <CollapsibleContent>
+          <CardContent className="px-0">
+            <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+              <AreaChart data={data}>
+                <defs>
+                  <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-total)" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="var(--color-total)" stopOpacity={0.1} />
+                  </linearGradient>
+                  <linearGradient id="fillErrors" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-errors)" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="var(--color-errors)" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="hour"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={32}
+                />
+                <YAxis
+                  yAxisId="left"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickCount={3}
+                  domain={[0, maxY]}
+                />
+                <YAxis
+                  yAxisId="right"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickCount={3}
+                  orientation="right"
+                  domain={[0, maxY]}
+                  className="hidden"
+                />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                <Area
+                  dataKey="total"
+                  type="natural"
+                  fill="url(#fillTotal)"
+                  stroke="var(--color-total)"
+                  stackId="a"
+                  yAxisId="left"
+                  className="pb-10"
+                />
+                <Area
+                  dataKey="errors"
+                  type="natural"
+                  fill="url(#fillErrors)"
+                  stroke="var(--color-errors)"
+                  stackId="a"
+                  yAxisId="right"
+                  className="pb-10"
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </AreaChart>
+            </ChartContainer>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };
 

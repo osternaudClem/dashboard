@@ -1,31 +1,90 @@
+'use client';
+
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useState } from 'react';
 
 import AppLogsChart from '@/components/apps/AppLogsChart';
 import HttpLogsTable from '@/components/table/HttpLogsTable';
+import TableFilters from '@/components/table/TableFilters';
 import { Button } from '@/components/ui/button';
+import { useGetHttpLogsByAppId, useGetHttpLogsStats } from '@/lib/react-query/httpLogsQueries';
 
-type Props = {
-  params: Promise<{ appId: string }>;
-};
+const AppPage = () => {
+  const params = useParams();
+  const appId = params.appId as string;
 
-const AppPage = async ({ params }: Props) => {
-  const { appId } = await params;
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [source, setSource] = useState('');
+  const [method, setMethod] = useState('');
+  const [status, setStatus] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
+
+  const {
+    data: tableData,
+    isLoading: isTableLoading,
+    refetch: refetchTable,
+  } = useGetHttpLogsByAppId({
+    appId,
+    page,
+    limit,
+    source,
+    method,
+    status,
+    startDate,
+    endDate,
+  });
+
+  const { data: chartData } = useGetHttpLogsStats({
+    appId,
+    source,
+    method,
+    status,
+    startDate,
+    endDate,
+  });
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="mb-4 flex items-center justify-between">
         <h1>{appId}</h1>
         <Button variant="outline" asChild>
           <Link href={`/app/${appId}/edit`}>Edit App</Link>
         </Button>
       </div>
-      <div className="">
-        <AppLogsChart appId={appId} />
-      </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-lg md:min-h-min">
-        <HttpLogsTable />
-      </div>
-    </>
+
+      <TableFilters
+        source={source}
+        setSource={setSource}
+        limit={limit}
+        setLimit={setLimit}
+        method={method}
+        setMethod={setMethod}
+        status={status}
+        setStatus={setStatus}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        refreshInterval={refreshInterval}
+        setRefreshInterval={setRefreshInterval}
+      />
+
+      <AppLogsChart httpLogs={chartData?.data || []} />
+
+      <HttpLogsTable
+        isLoading={isTableLoading}
+        httpLogs={tableData?.data || []}
+        pagination={tableData?.pagination}
+        page={page}
+        setPage={setPage}
+        onRefresh={refetchTable}
+        refreshInterval={refreshInterval}
+      />
+    </div>
   );
 };
 

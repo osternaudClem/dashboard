@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { QueryFunction, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
+import type {
+  QueryFunction,
+  QueryKey,
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
+} from '@tanstack/react-query';
 
 export type QueryResponse<T> = T;
 
@@ -8,9 +14,9 @@ export type MutationResponse = {
 };
 
 export const useGenericQuery = <T>(
-  queryKey: Array<string | number>,
+  queryKey: QueryKey,
   queryFn: QueryFunction<T>,
-  options?: { enabled?: boolean },
+  options?: Omit<UseQueryOptions<T, Error, T, QueryKey>, 'queryKey' | 'queryFn'>,
 ): UseQueryResult<T> => {
   return useQuery({
     queryKey,
