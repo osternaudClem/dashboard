@@ -1,13 +1,23 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -19,6 +29,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  useDeleteProjectApp,
+  useGetAppById,
+  useUpdateProjectApp,
+} from '@/lib/react-query/appQueries';
 import { type AppFormValues, appFormSchema } from '@/lib/validations/app';
 
 type Props = {
@@ -36,14 +51,9 @@ const EditAppForm = ({ appId }: Props) => {
     },
   });
 
-  const { data: app, isLoading } = useQuery({
-    queryKey: ['app', appId],
-    queryFn: async () => {
-      const response = await fetch(`/api/app/${appId}`);
-      if (!response.ok) throw new Error('Failed to fetch app');
-      return response.json();
-    },
-  });
+  const { data: app, isLoading } = useGetAppById(appId || '');
+  const { mutateAsync: updateApp, isPending } = useUpdateProjectApp(appId || '');
+  const { mutateAsync: deleteApp, isPending: isDeletePending } = useDeleteProjectApp();
 
   useEffect(() => {
     if (app) {
@@ -51,28 +61,34 @@ const EditAppForm = ({ appId }: Props) => {
     }
   }, [app, form]);
 
-  const mutation = useMutation({
-    mutationFn: async (values: AppFormValues) => {
-      const response = await fetch(`/api/app/${appId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      if (!response.ok) throw new Error('Failed to update app');
-      return response.json();
-    },
-    onSuccess: () => {
-      toast.success('App updated successfully');
-      router.push(`/dashboard/${appId}`);
-    },
-    onError: () => {
-      toast.error('Failed to update app');
-    },
-  });
+  const onSubmit = async (values: AppFormValues) => {
+    try {
+      const response = await updateApp(values);
 
-  const onSubmit = (values: AppFormValues) => {
-    mutation.mutate(values);
+      if (!response.id) throw new Error('Failed to update app');
+      toast.success('App updated successfully');
+      router.push(`/project/${app?.projectId}/app/${appId}`);
+    } catch {
+      toast.error('Failed to update app');
+    }
   };
+
+  const handleConfirmDelete = useCallback(async () => {
+    try {
+      if (!appId) throw new Error('App ID is missing');
+
+      const response = await deleteApp(appId);
+
+      if (!response.id) {
+        throw new Error('Failed to delete app');
+      }
+
+      toast.success('App deleted successfully');
+      router.push(`/project/${app?.projectId}`);
+    } catch {
+      toast.error('Failed to delete app');
+    }
+  }, [app?.projectId, appId, deleteApp, router]);
 
   if (isLoading || !appId) {
     return <div className="flex items-center justify-center p-8">Loading...</div>;
@@ -112,9 +128,34 @@ const EditAppForm = ({ appId }: Props) => {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <div className="flex justify-between">
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive">
+                    Delete App
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete this app and remove
+                      all associated data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmDelete} disabled={isDeletePending}>
+                      {!isDeletePending ? 'Yes, delete it!' : 'Deleting...'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </form>
         </Form>
       </CardContent>

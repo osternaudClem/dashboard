@@ -50,3 +50,19 @@ export async function PUT(req: Request, { params }: { params: { appId: string } 
     return NextResponse.json({ error: 'Failed to update app' }, { status: 500 });
   }
 }
+
+export async function DELETE(_req: Request, { params }: { params: { appId: string } }) {
+  try {
+    const session: ExtendedSession | null = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await prisma.app.delete({ where: { id: params.appId } });
+
+    return NextResponse.json({ success: true, id: params.appId });
+  } catch {
+    return NextResponse.json({ error: 'Failed to delete app' }, { status: 500 });
+  }
+}

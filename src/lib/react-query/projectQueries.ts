@@ -1,4 +1,5 @@
 import { App, Project } from '@prisma/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { QueryResponse, useGenericMutation, useGenericQuery } from '@/hooks/use-generic-query';
 
@@ -12,11 +13,22 @@ type NewProject = {
   url?: string;
 };
 
-export const useGetMeProjects = () =>
-  useGenericQuery([QUERY_KEYS.ALL_USER_PROJECTS], async (): Promise<ProjectWithApps[]> => {
+export const useGetMeProjects = () => {
+  const queryClient = useQueryClient();
+
+  return useGenericQuery([QUERY_KEYS.ALL_USER_PROJECTS], async (): Promise<ProjectWithApps[]> => {
     const res = await fetch(`/api/projects`);
-    return res.json();
+    const projects: ProjectWithApps[] = await res.json();
+
+    projects.forEach((project) =>
+      project.apps.forEach((app) => {
+        queryClient.setQueryData([QUERY_KEYS.APP_BY_ID, app.id], app);
+      }),
+    );
+
+    return projects;
   });
+};
 
 export const useGetProjectById = (projectId: string) =>
   useGenericQuery<ProjectWithApps | null>(

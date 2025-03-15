@@ -13,6 +13,7 @@ import { useGetHttpLogsByAppId, useGetHttpLogsStats } from '@/lib/react-query/ht
 const AppPage = () => {
   const params = useParams();
   const appId = params.appId as string;
+  const projectId = params.projectId as string;
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -52,7 +53,7 @@ const AppPage = () => {
       <div className="mb-4 flex items-center justify-between">
         <h1>{appId}</h1>
         <Button variant="outline" asChild>
-          <Link href={`/app/${appId}/edit`}>Edit App</Link>
+          <Link href={`/project/${projectId}/app/${appId}/edit`}>Edit App</Link>
         </Button>
       </div>
 
