@@ -87,6 +87,8 @@ export async function GET(req: NextRequest) {
     const endDate = url.searchParams.get('endDate') || undefined;
     const page = parseInt(url.searchParams.get('page') || '1', 10);
     const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+    const appId = url.searchParams.get('appId') || undefined;
+    const isStats = url.searchParams.get('stats') === 'true';
 
     const status = statusCode ? parseInt(statusCode, 10) : undefined;
 
@@ -96,17 +98,24 @@ export async function GET(req: NextRequest) {
         url: logUrl,
         statusCode: status,
         source,
+        appId,
         timestamp: {
           ...(startDate && { gte: new Date(startDate) }),
           ...(endDate && { lte: new Date(endDate) }),
         },
       },
-      take: limit,
-      skip: (page - 1) * limit,
-      orderBy: {
-        timestamp: 'desc',
-      },
+      orderBy: isStats ? { timestamp: 'asc' } : { timestamp: 'desc' },
+      ...(isStats
+        ? {}
+        : {
+            take: limit,
+            skip: (page - 1) * limit,
+          }),
     });
+
+    if (isStats) {
+      return NextResponse.json({ data: httpLogs });
+    }
 
     const totalHttpLogs = await prisma.httpLog.count({
       where: {
@@ -114,6 +123,7 @@ export async function GET(req: NextRequest) {
         url: logUrl,
         statusCode: status,
         source,
+        appId,
         timestamp: {
           ...(startDate && { gte: new Date(startDate) }),
           ...(endDate && { lte: new Date(endDate) }),

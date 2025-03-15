@@ -1,32 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { format, subHours } from 'date-fns';
+
 import { prisma } from '@/lib/prisma/prisma';
 
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const appId = url.searchParams.get('appId');
+    const startDate = url.searchParams.get('from');
+    const endDate = url.searchParams.get('to');
 
     if (!appId) {
       return NextResponse.json({ error: 'Missing appId parameter' }, { status: 400 });
     }
 
-    const now = new Date();
-    const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const logs = await getLogsGroupedByHour(appId, startDate, endDate);
 
-    const [hourStats, dayStats, monthStats] = await Promise.all([
-      getTimeframeStats(appId, hourAgo),
-      getTimeframeStats(appId, dayAgo),
-      getTimeframeStats(appId, monthAgo),
-    ]);
-
-    return NextResponse.json({
-      hour: hourStats,
-      day: dayStats,
-      month: monthStats,
-    });
+    return NextResponse.json(logs);
   } catch (error) {
     return NextResponse.json(
       {
@@ -38,23 +29,57 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function getTimeframeStats(appId: string, fromDate: Date) {
-  const logs = await prisma.httpLog.groupBy({
-    by: ['statusCode'],
-    where: {
-      appId,
-      timestamp: {
-        gte: fromDate,
-      },
-    },
-    _count: true,
+const getLogsGroupedByHour = async (
+  appId: string,
+  startDate: string | null,
+  endDate: string | null,
+) => {
+  const since = startDate ? new Date(startDate) : subHours(new Date(), 24);
+  const until = endDate ? new Date(endDate) : new Date();
+
+  const totalRequests = await prisma.httpLog.groupBy({
+    by: ['timestamp'],
+    _count: { _all: true },
+    where: { appId, timestamp: { gte: since, lte: until } },
+    orderBy: { timestamp: 'asc' },
   });
 
-  const total = logs.reduce((acc, curr) => acc + curr._count, 0);
-  const success = logs
-    .filter((log) => log.statusCode >= 200 && log.statusCode < 400)
-    .reduce((acc, curr) => acc + curr._count, 0);
-  const failed = total - success;
+  const errorRequests = await prisma.httpLog.groupBy({
+    by: ['timestamp'],
+    _count: { _all: true },
+    where: { appId, timestamp: { gte: since, lte: until }, statusCode: { gte: 400 } },
+    orderBy: { timestamp: 'asc' },
+  });
 
-  return { total, success, failed };
-}
+  return formatLogsForGraph(totalRequests, errorRequests);
+};
+
+const formatLogsForGraph = (
+  totalLogs: { timestamp: Date; _count: { _all: number } }[],
+  errorLogs: { timestamp: Date; _count: { _all: number } }[],
+) => {
+  const hoursMap = new Map<string, { total: number; errors: number }>();
+
+  for (let i = 0; i < 24; i++) {
+    const hour = format(subHours(new Date(), i), 'yyyy-MM-dd HH:00');
+    hoursMap.set(hour, { total: 0, errors: 0 });
+  }
+
+  totalLogs.forEach(({ timestamp, _count }) => {
+    const hourKey = format(new Date(timestamp), 'yyyy-MM-dd HH:00');
+    if (hoursMap.has(hourKey)) {
+      hoursMap.get(hourKey)!.total = _count._all;
+    }
+  });
+
+  errorLogs.forEach(({ timestamp, _count }) => {
+    const hourKey = format(new Date(timestamp), 'yyyy-MM-dd HH:00');
+    if (hoursMap.has(hourKey)) {
+      hoursMap.get(hourKey)!.errors = _count._all;
+    }
+  });
+
+  return Array.from(hoursMap.entries())
+    .map(([hour, values]) => ({ hour, ...values }))
+    .reverse();
+};
