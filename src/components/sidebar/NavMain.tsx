@@ -92,7 +92,7 @@ const CollapsibleMenu = ({ isOpen = false, item }: CollapsibleMenuProps) => {
   );
 };
 
-export function NavMain() {
+const NavMain = () => {
   const { data: projects = [], isFetching: isProjectFetching } = useGetMeProjects();
 
   return (
@@ -114,4 +114,6 @@ export function NavMain() {
       </SidebarMenu>
     </SidebarGroup>
   );
-}
+};
+
+export default NavMain;

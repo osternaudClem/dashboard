@@ -1,9 +1,9 @@
 'use client';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGetProjectById } from '@/lib/react-query/projectQueries';
 import { cn } from '@/lib/utils';
 
-import { Skeleton } from '../ui/skeleton';
 import ListItemApp from './ListItemApp';
 
 const ListAppsSkeleton = () => {

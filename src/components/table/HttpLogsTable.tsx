@@ -7,6 +7,8 @@ import { Collapsible, CollapsibleContent } from '@radix-ui/react-collapsible';
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { ChevronRightIcon } from 'lucide-react';
 
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Table,
   TableBody,
@@ -17,8 +19,6 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
-import { Card, CardContent, CardHeader } from '../ui/card';
-import { CollapsibleTrigger } from '../ui/collapsible';
 import LogDetailsSheet from './LogDetailsSheet';
 import TablePagination from './TablePagination';
 import { columns } from './columns';

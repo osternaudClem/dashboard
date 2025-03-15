@@ -7,6 +7,7 @@ import { Collapsible } from '@radix-ui/react-collapsible';
 import { ChevronRightIcon } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
@@ -15,10 +16,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-
-import { Card, CardContent, CardHeader } from '../ui/card';
-import { CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
 const chartConfig = {
   total: {

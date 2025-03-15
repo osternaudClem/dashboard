@@ -2,18 +2,17 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { PlusIcon, XIcon } from 'lucide-react';
 
+import SelectDate from '@/components/SelectDate';
 import { Button } from '@/components/ui/button';
-import { HTTP_METHODS, STATUS_CODES } from '@/constants/filters';
-import { cn } from '@/lib/utils';
-
-import SelectDate from '../SelectDate';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
+import { HTTP_METHODS, STATUS_CODES } from '@/constants/filters';
+import { cn } from '@/lib/utils';
 
 type FilterKey = 'method' | 'statusCode' | 'timeRange';
 

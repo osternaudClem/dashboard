@@ -9,11 +9,11 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 
-import { NavMain } from './NavMain';
+import NavMain from './NavMain';
 import NavUser from './NavUser';
-import { ThemeToggle } from './ThemeToggle';
+import ThemeToggle from './ThemeToggle';
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -31,4 +31,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarRail />
     </Sidebar>
   );
-}
+};
+
+export default AppSidebar;

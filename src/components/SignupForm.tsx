@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>) {
+const SignUpForm = ({ className, ...props }: React.ComponentProps<'div'>) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -100,4 +100,6 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<'div'>)
       </Card>
     </div>
   );
-}
+};
+
+export default SignUpForm;

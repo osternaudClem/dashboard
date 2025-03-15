@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { App } from '@prisma/client';
 import { PenSquareIcon, TrashIcon } from 'lucide-react';
 
+import { getDefaultToday } from '@/components/SelectDate';
+import { Button } from '@/components/ui/button';
 import { useGetHttpLogsStats } from '@/lib/react-query/httpLogsQueries';
 import { cn } from '@/lib/utils';
 
-import { getDefaultToday } from '../SelectDate';
-import { Button } from '../ui/button';
 import AppLogsChart from './AppLogsChart';
 
 type Props = {
