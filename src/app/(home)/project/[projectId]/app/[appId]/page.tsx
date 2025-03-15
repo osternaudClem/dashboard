@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import RequestStatsCard from '@/components/stats/RequestStats';
+import AppLogsChart from '@/components/apps/AppLogsChart';
 import HttpLogsTable from '@/components/table/HttpLogsTable';
 import { Button } from '@/components/ui/button';
 
@@ -19,12 +19,10 @@ const AppPage = async ({ params }: Props) => {
           <Link href={`/app/${appId}/edit`}>Edit App</Link>
         </Button>
       </div>
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <RequestStatsCard timeframe="hour" appId={appId} />
-        <RequestStatsCard timeframe="day" appId={appId} />
-        <RequestStatsCard timeframe="month" appId={appId} />
+      <div className="">
+        <AppLogsChart appId={appId} />
       </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min">
+      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-lg md:min-h-min">
         <HttpLogsTable />
       </div>
     </>

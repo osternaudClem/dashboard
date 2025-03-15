@@ -1,14 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryFunction, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
-export type QueryResponse<T> = {
-  error?: {
-    message: string;
-  };
-  data?: T;
-  count?: number;
-  code?: number;
-};
+export type QueryResponse<T> = T;
 
 export type MutationResponse = {
   success: boolean;

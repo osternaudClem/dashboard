@@ -4,7 +4,7 @@ import { QueryResponse, useGenericMutation, useGenericQuery } from '@/hooks/use-
 
 import { QUERY_KEYS } from './queryKeys';
 
-type ProjectWithApps = Project & { apps: App[] };
+export type ProjectWithApps = Project & { apps: App[] };
 
 type NewProject = {
   name: string;
@@ -17,6 +17,15 @@ export const useGetMeProjects = () =>
     const res = await fetch(`/api/projects`);
     return res.json();
   });
+
+export const useGetProjectById = (projectId: string) =>
+  useGenericQuery<ProjectWithApps | null>(
+    [QUERY_KEYS.PROJECT_BY_ID, projectId],
+    async (): Promise<ProjectWithApps | null> => {
+      const res = await fetch(`/api/projects/${projectId}`);
+      return res.json();
+    },
+  );
 
 export const useCreateMeProject = () => {
   return useGenericMutation<NewProject, QueryResponse<Project>>(

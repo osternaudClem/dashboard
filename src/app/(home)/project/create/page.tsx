@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -17,6 +19,7 @@ const projectSchema = z.object({
 });
 
 const NewProject = () => {
+  const router = useRouter();
   const { mutateAsync: createProject } = useCreateMeProject();
 
   const form = useForm<z.infer<typeof projectSchema>>({
@@ -32,9 +35,11 @@ const NewProject = () => {
     try {
       const response = await createProject(data);
 
-      if (response.error) {
+      if (!response.id) {
         return;
       }
+
+      router.push(`/project/${response.id}`);
     } catch (error) {
       console.error(error);
     }

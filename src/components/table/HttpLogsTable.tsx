@@ -11,6 +11,8 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
 } from '@/components/ui/pagination';
 import {
   Table,
@@ -168,22 +170,16 @@ const HttpLogsTable = () => {
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              {page === 1 ? (
-                <PaginationLink isActive={false}>Previous</PaginationLink>
-              ) : (
-                <PaginationLink onClick={() => setPage(page - 1)}>Previous</PaginationLink>
-              )}
+              <PaginationPrevious onClick={() => setPage(page - 1)} isActive={page > 1} />
             </PaginationItem>
             <PaginationItem>
               <PaginationLink>{data.pagination.page}</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink
-                isActive={page < data.pagination.totalPages}
+              <PaginationNext
                 onClick={() => setPage(page + 1)}
-              >
-                Next
-              </PaginationLink>
+                isActive={page < data.pagination.totalPages}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
