@@ -5,13 +5,15 @@ import { type VariantProps, cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const alertVariants = cva(
-  'relative w-full rounded-md border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current',
+  `relative w-full rounded-md border px-4 py-3 text-sm grid
+  has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5
+  items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current`,
   {
     variants: {
       variant: {
         default: 'bg-card text-card-foreground',
-        destructive:
-          'text-destructive-foreground bg-destructive/60 border-destructive-foreground/20 border [&>svg]:text-destructive-foreground *:data-[slot=alert-description]:text-destructive-foreground/90',
+        destructive: `text-destructive-foreground bg-destructive/60 border-destructive-foreground/20 border
+        [&>svg]:text-destructive-foreground *:data-[slot=alert-description]:text-destructive-foreground/90`,
         success:
           'bg-success/60 [&>svg]:text-success-foreground text-success-foreground border-success-foreground/20',
       },

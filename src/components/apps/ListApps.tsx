@@ -25,7 +25,10 @@ const ListAppsSkeleton = () => {
 
 const EmptyState = ({ projectId }: { projectId?: string }) => {
   return (
-    <div className="border-input my-8 flex flex-col items-center justify-center space-y-4 rounded-lg border border-dashed p-8 text-center">
+    <div
+      className="border-input my-8 flex flex-col items-center justify-center space-y-4 rounded-lg border
+        border-dashed p-8 text-center"
+    >
       <AppWindowMacIcon className="text-muted-foreground h-10 w-10" />
       <p className="text-muted-foreground text-sm">No apps have been created yet.</p>
       <Button variant="default" asChild>
