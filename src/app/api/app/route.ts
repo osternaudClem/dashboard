@@ -1,9 +1,9 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 
-import { ExtendedSession, authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/prisma';
 
 const appSchema = z.object({
@@ -13,7 +13,9 @@ const appSchema = z.object({
 
 export async function GET() {
   try {
-    const session: ExtendedSession | null = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
     if (!session || !session.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -35,7 +37,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session: ExtendedSession | null = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
     if (!session || !session.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
