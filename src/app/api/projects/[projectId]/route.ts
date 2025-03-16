@@ -1,10 +1,8 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { getServerSession } from 'next-auth';
-
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/prisma';
-
-import { ExtendedSession, authOptions } from '../../auth/[...nextauth]/route';
 
 type ParamsProps = {
   params: Promise<{
@@ -16,7 +14,9 @@ export async function GET(_req: Request, { params }: ParamsProps) {
   try {
     const { projectId } = await params;
 
-    const session: ExtendedSession | null = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

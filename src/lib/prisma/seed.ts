@@ -9,19 +9,39 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
 
-  // 🔹 Create an Admin User
-  const hashedPassword = await bcrypt.hash('password123', 10);
-  const user = await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
-    update: {},
-    create: {
-      username: 'admin',
-      email: 'admin@example.com',
-      password: hashedPassword,
-    },
-  });
+  const email = 'admin@example.com';
 
-  console.log(`✅ Created User: ${user.email}`);
+  // Check if the user already exists
+  let user = await prisma.user.findUnique({ where: { email } });
+
+  if (!user) {
+    const hashedPassword = await bcrypt.hash('SecurePassword123', 10);
+
+    user = await prisma.user.create({
+      data: {
+        id: crypto.randomUUID(),
+        name: 'Admin User',
+        email,
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        accounts: {
+          create: {
+            id: crypto.randomUUID(),
+            providerId: 'credentials',
+            accountId: email,
+            password: hashedPassword,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        },
+      },
+    });
+
+    console.log('✅ User created:', user);
+  } else {
+    console.log('⚠️ User already exists:', user.email);
+  }
 
   // 🔹 Create a Project
   const project = await prisma.project.upsert({

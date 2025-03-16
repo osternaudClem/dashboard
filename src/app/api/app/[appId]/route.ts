@@ -1,8 +1,7 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { getServerSession } from 'next-auth';
-
-import { type ExtendedSession, authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/prisma';
 
 type ParamsProps = {
@@ -15,7 +14,9 @@ export async function GET(_req: Request, { params }: ParamsProps) {
   try {
     const { appId } = await params;
 
-    const session: ExtendedSession | null = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -44,7 +45,9 @@ export async function PUT(req: Request, { params }: ParamsProps) {
   try {
     const { appId } = await params;
 
-    const session: ExtendedSession | null = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -65,7 +68,9 @@ export async function DELETE(_req: Request, { params }: ParamsProps) {
   try {
     const { appId } = await params;
 
-    const session: ExtendedSession | null = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

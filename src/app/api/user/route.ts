@@ -1,21 +1,21 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { getServerSession } from 'next-auth';
-
-import { type ExtendedSession, authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/prisma';
 
 export async function GET() {
   try {
-    const session: ExtendedSession | null = await getServerSession(authOptions);
-
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
     if (!session || !session.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, username: true, email: true },
+      select: { id: true, name: true, email: true },
     });
 
     if (!user) {

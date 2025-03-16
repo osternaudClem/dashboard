@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getToken } from 'next-auth/jwt';
+import { getSessionCookie } from 'better-auth/cookies';
 
 const protectedRoutes = ['/app', '/'];
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+export async function middleware(request: NextRequest) {
+  const sessionCookie = getSessionCookie(request);
 
-  const isProtectedRoute = protectedRoutes.some((route) => req.nextUrl.pathname.startsWith(route));
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route),
+  );
 
-  if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL('/login', req.url));
+  if (!sessionCookie && isProtectedRoute) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return NextResponse.next();

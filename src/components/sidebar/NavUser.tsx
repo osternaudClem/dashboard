@@ -1,9 +1,9 @@
 'use client';
 
-import { User } from '@prisma/client';
-import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
+
 import { BadgeCheck, ChevronsUpDown, LogOut } from 'lucide-react';
-import { signOut } from 'next-auth/react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -20,23 +20,17 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-
-const fetchUser = async (): Promise<User> => {
-  const res = await fetch(`/api/user`);
-  return res.json();
-};
+import { signOut, useSession } from '@/lib/auth-client';
 
 const NavUser = () => {
   const { isMobile } = useSidebar();
+  const { data: currentUser } = useSession();
+  const router = useRouter();
 
-  const { data: user = null, isLoading } = useQuery({
-    queryKey: ['user'],
-    queryFn: () => fetchUser(),
-  });
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  const handleLogout = useCallback(() => {
+    signOut();
+    router.push('/login');
+  }, [router]);
 
   return (
     <SidebarMenu>
@@ -48,11 +42,13 @@ const NavUser = () => {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">{user?.username.slice(0, 2)}</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {currentUser?.user.name.slice(0, 2)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.username}</span>
-                <span className="truncate text-xs">{user?.email}</span>
+                <span className="truncate font-medium">{currentUser?.user.name}</span>
+                <span className="truncate text-xs">{currentUser?.user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -67,12 +63,12 @@ const NavUser = () => {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarFallback className="rounded-lg">
-                    {user?.username.slice(0, 2)}
+                    {currentUser?.user.name.slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user?.username}</span>
-                  <span className="truncate text-xs">{user?.email}</span>
+                  <span className="truncate font-medium">{currentUser?.user.name}</span>
+                  <span className="truncate text-xs">{currentUser?.user.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -84,7 +80,7 @@ const NavUser = () => {
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>
