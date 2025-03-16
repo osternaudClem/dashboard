@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { Alert } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -36,7 +36,12 @@ const formSchema = z
     path: ['confirmPassword'],
   });
 
-const SignUpForm = ({ className, ...props }: React.ComponentProps<'div'>) => {
+type SignUpFormProps = {
+  className?: string;
+  token?: string;
+};
+
+const SignUpForm = ({ className = '' }: SignUpFormProps) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -74,7 +79,7 @@ const SignUpForm = ({ className, ...props }: React.ComponentProps<'div'>) => {
   };
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
+    <div className={cn('flex flex-col gap-6', className)}>
       <Card>
         <CardHeader>
           <CardTitle>Register your account</CardTitle>
@@ -82,9 +87,13 @@ const SignUpForm = ({ className, ...props }: React.ComponentProps<'div'>) => {
         </CardHeader>
 
         <CardContent>
-          {error && <Alert variant="destructive">{error}</Alert>}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <FormField
                 control={form.control}
                 name="name"

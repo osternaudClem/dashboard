@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,44 +19,40 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { PasswordInput } from '@/components/ui/password-input';
-import { signIn } from '@/lib/auth-client';
+import { forgetPassword } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string(),
 });
 
-type LoginFormProps = {
+type ForgetPasswordFormType = {
   className?: string;
-  token?: string;
 };
 
-const LoginForm = ({ className = '' }: LoginFormProps) => {
+const ForgetPasswordForm = ({ className = '' }: ForgetPasswordFormType) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
-      password: '',
     },
   });
 
-  const handleLogin = async (values: z.infer<typeof formSchema>) => {
+  const handleForgetPassword = async (values: z.infer<typeof formSchema>) => {
     setError('');
     setIsLoading(true);
-    await signIn.email(
+    await forgetPassword(
       {
         ...values,
-        callbackURL: '/',
+        redirectTo: '/reset-password',
       },
       {
         onSuccess: () => {
-          router.push('/');
+          setShowSuccessMessage(true);
         },
         onError: (ctx) => {
           setError(ctx.error.message);
@@ -73,17 +68,20 @@ const LoginForm = ({ className = '' }: LoginFormProps) => {
     <div className={cn('flex flex-col gap-6', className)}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <CardTitle>Forgot Password</CardTitle>
+          <CardDescription>Enter your email below to reset your password</CardDescription>
         </CardHeader>
         <CardContent>
+          {error && <Alert variant="destructive">{error}</Alert>}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+            <form onSubmit={form.handleSubmit(handleForgetPassword)} className="space-y-4">
+              {showSuccessMessage ? (
+                <Alert variant="success">
+                  <AlertDescription>
+                    A password reset link has been sent to your email address.
+                  </AlertDescription>
                 </Alert>
-              )}
+              ) : null}
 
               <FormField
                 control={form.control}
@@ -99,38 +97,15 @@ const LoginForm = ({ className = '' }: LoginFormProps) => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        href="/forget-password"
-                        className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                      >
-                        Forgot your password?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <PasswordInput {...field} />
-                    </FormControl>
-                    <FormMessage>{form.formState.errors.password?.message}</FormMessage>
-                  </FormItem>
-                )}
-              />
-
               <div>
                 <Button type="submit" className="w-full" loading={isLoading}>
-                  Login
+                  Ask new password
                 </Button>
               </div>
 
               <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{' '}
                 <Link href="/signup" className="underline underline-offset-4">
-                  Sign up
+                  Back to the login page
                 </Link>
               </div>
             </form>
@@ -141,4 +116,4 @@ const LoginForm = ({ className = '' }: LoginFormProps) => {
   );
 };
 
-export default LoginForm;
+export default ForgetPasswordForm;
