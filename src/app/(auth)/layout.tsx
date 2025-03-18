@@ -1,4 +1,5 @@
 import Logo from '@/components/Logo';
+import ThemeToggle from '@/components/sidebar/ThemeToggle';
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -7,6 +8,7 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="mb-6 flex justify-center">
           <Logo vertical />
         </div>
+        <ThemeToggle />
         {children}
       </div>
     </div>

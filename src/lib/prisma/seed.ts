@@ -126,4 +126,4 @@ async function generateFakeHttpLogs(appId: string) {
 //     await prisma.$disconnect();
 //   });
 
-generateFakeHttpLogs('cm89xxwfn0004wlo5n2kbzwgq');
+generateFakeHttpLogs('cm8f03ngp0001q7dwb5pe7bxf');

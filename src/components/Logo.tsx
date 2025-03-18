@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useTheme } from 'next-themes';
 
@@ -21,11 +21,16 @@ type Props = {
 };
 
 const Logo = ({ className = '', isIcon = false, vertical = false }: Props) => {
-  const { theme, systemTheme } = useTheme();
+  const { theme, systemTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentTheme = mounted ? (resolvedTheme ?? systemTheme ?? theme) : 'light';
 
   const logoPath = useMemo(() => {
-    const currentTheme = theme === 'system' ? systemTheme : theme;
-
     if (isIcon) {
       return currentTheme === 'dark' ? IMAGES_PATH.darkIcon : IMAGES_PATH.lightIcon;
     }
@@ -35,7 +40,7 @@ const Logo = ({ className = '', isIcon = false, vertical = false }: Props) => {
     }
 
     return currentTheme === 'dark' ? IMAGES_PATH.dark : IMAGES_PATH.light;
-  }, [isIcon, systemTheme, theme, vertical]);
+  }, [currentTheme, isIcon, vertical]);
 
   return (
     <Image src={logoPath} alt="Logo" width={200} height={303} priority className={className} />
