@@ -5,7 +5,6 @@ import { useCallback, useState } from 'react';
 
 import { ChevronRight, Plus } from 'lucide-react';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   SidebarGroup,
@@ -64,9 +63,6 @@ const CollapsibleMenu = ({ isOpen = false, item }: CollapsibleMenuProps) => {
               className="flex items-center gap-2"
               onClick={openSubMenu}
             >
-              <Avatar className="rounded border">
-                <AvatarFallback className="rounded-none">{item.name.slice(0, 2)}</AvatarFallback>
-              </Avatar>
               <span>{item.name}</span>
             </Link>
 

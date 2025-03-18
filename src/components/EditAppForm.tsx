@@ -35,6 +35,7 @@ import {
   useUpdateProjectApp,
 } from '@/lib/react-query/appQueries';
 import { type AppFormValues, appFormSchema } from '@/lib/validations/app';
+import { PasswordInput } from './ui/password-input';
 
 type Props = {
   appId?: string;
@@ -122,7 +123,7 @@ const EditAppForm = ({ appId }: Props) => {
                 <FormItem>
                   <FormLabel>API Key</FormLabel>
                   <FormControl>
-                    <Input {...field} readOnly className="bg-muted" />
+                    <PasswordInput {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -34,11 +34,20 @@ const useBreadcrumbs = () => {
       }
 
       // check if segment equal to a project id
-      if (project && project.id === segment) {
-        return {
-          title: project.name,
-          link: `/project/${project.id}`,
-        };
+      if (project) {
+        if (project.id === segment) {
+          return {
+            title: project.name,
+            link: `/project/${project.id}`,
+          };
+        }
+
+        if (segment === 'app') {
+          return {
+            title: 'App',
+            link: `/project/${project.id}`,
+          };
+        }
       }
 
       // check if segment equal to an app id
@@ -46,13 +55,6 @@ const useBreadcrumbs = () => {
         return {
           title: app.name,
           link: `/project/${project?.id}/app/${app.id}`,
-        };
-      }
-
-      if (app && project && segment === 'app') {
-        return {
-          title: 'App',
-          link: `/project/${project.id}`,
         };
       }
 

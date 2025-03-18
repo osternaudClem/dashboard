@@ -1,17 +1,18 @@
-import LoginForm from '@/components/LoginForm';
 import Logo from '@/components/Logo';
+import ThemeToggle from '@/components/sidebar/ThemeToggle';
 
-const LoginPage = () => {
+const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex justify-center">
           <Logo vertical />
         </div>
-        <LoginForm />
+        <ThemeToggle />
+        {children}
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default AuthLayout;

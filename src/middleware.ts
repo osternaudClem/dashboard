@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSessionCookie } from 'better-auth/cookies';
 
-const protectedRoutes = ['/app', '/'];
+const protectedRoutes = ['/project', '/'];
 
 export async function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
@@ -19,5 +19,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/app/:path*', '/'],
+  matcher: ['/app/:path*', '/', '/project/:path*'],
 };
