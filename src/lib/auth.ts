@@ -3,6 +3,7 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 
 import { sendEmail } from './email';
+import { isRegistrationEnabled } from './config';
 
 const prisma = new PrismaClient();
 
@@ -12,6 +13,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    disableSignUp: !isRegistrationEnabled(),
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,

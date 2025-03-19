@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { signIn } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
+import { isRegistrationEnabled } from '@/lib/config';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -68,6 +69,21 @@ const LoginForm = ({ className = '' }: LoginFormProps) => {
       },
     );
   };
+
+  const showRegistrationLink = useMemo(() => {
+    if (isRegistrationEnabled()) {
+      return (
+        <div className="mt-4 text-center text-sm">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="underline underline-offset-4">
+            Sign up
+          </Link>
+        </div>
+      );
+    }
+
+    return null;
+  }, []);
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
@@ -127,12 +143,7 @@ const LoginForm = ({ className = '' }: LoginFormProps) => {
                 </Button>
               </div>
 
-              <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{' '}
-                <Link href="/signup" className="underline underline-offset-4">
-                  Sign up
-                </Link>
-              </div>
+              {showRegistrationLink}
             </form>
           </Form>
         </CardContent>

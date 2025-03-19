@@ -1,11 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import prompts from 'prompts';
+import { isRegistrationEnabled } from '../config';
 
 const prisma = new PrismaClient();
 
 async function createUser() {
   try {
+    if (!isRegistrationEnabled()) {
+      // eslint-disable-next-line no-console
+      console.log('❌ Registration is disabled');
+      return;
+    }
+
     const response = await prompts([
       {
         type: 'text',
